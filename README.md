@@ -1,4 +1,4 @@
-## Readme
+## README
 
 usage: python train.py
 
