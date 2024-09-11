@@ -6,4 +6,5 @@ ckpt_path: './ckpt'
 visualization_path: './visualization'
 log_path: './logs'
 input_channel: 100
-output_channel: 1
+output_channel: 3
+data_path: '/home/sda1/datasets/bedroom'

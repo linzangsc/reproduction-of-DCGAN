@@ -16,8 +16,10 @@ class Generator(nn.Module):
             nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.ConvTranspose2d(128, output_channel, kernel_size=3, stride=2, padding=1, output_padding=1),
-            nn.Tanh(),
+            nn.Sigmoid(),
         )
+        for param in self.parameters():
+            nn.init.normal_(param, mean=0., std=0.02)
     
     def forward(self, z):
         # shape of z: (bs, 100)
@@ -45,6 +47,8 @@ class Discriminator(nn.Module):
             nn.Conv2d(1024, 1, kernel_size=4),
             nn.Sigmoid()
         )
+        for param in self.parameters():
+            nn.init.normal_(param, mean=0., std=0.02)
     
     def forward(self, x):
         # shape of x: (bs, 3, h, w)

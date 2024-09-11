@@ -2,19 +2,31 @@ import os
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-from torchvision import datasets, transforms
 
-class CustomizedDataset:
-    def __init__(self) -> None:
+from torchvision import datasets, transforms
+from torch.utils.data import Dataset
+from PIL import Image
+
+
+class CustomizedDataset(Dataset):
+    def __init__(self, root) -> None:
         self.transform = transforms.Compose([
             transforms.Resize([64, 64]),
             transforms.ToTensor(),
         ])
 
-        self.train_dataset = datasets.MNIST(root='./dataset', train=True, 
-                                            download=True, transform=self.transform)
-        self.test_dataset = datasets.MNIST(root='./dataset', train=False, 
-                                           download=True, transform=self.transform)
+        self.root = root
+        self.images = os.listdir(self.root)
+    
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        image_name = os.path.join(self.root, self.images[idx])
+        image = Image.open(image_name).convert('RGB')
+        image = self.transform(image)
+
+        return image
 
 def visualize_float_result(image, axs):
     for i, img in enumerate(image):

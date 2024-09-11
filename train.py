@@ -19,13 +19,9 @@ class Trainer:
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.batch_size = config['batch_size']
         self.num_epochs = config['num_epochs']
-        self.dataset = CustomizedDataset()
-        self.train_dataset = self.dataset.train_dataset
-        self.test_dataset = self.dataset.test_dataset
-        self.train_loader = torch.utils.data.DataLoader(dataset=self.train_dataset, 
+        self.dataset = CustomizedDataset(config['data_path'])
+        self.train_loader = torch.utils.data.DataLoader(dataset=self.dataset, 
                                                         batch_size=self.batch_size, shuffle=True)
-        self.test_loader = torch.utils.data.DataLoader(dataset=self.test_dataset, 
-                                                       batch_size=self.batch_size, shuffle=False)
         self.input_channel = config['input_channel']
         self.output_channel = config['output_channel']
         self.generator = Generator(self.input_channel, self.output_channel).to(self.device)
@@ -38,7 +34,7 @@ class Trainer:
         self.generator.train()
         self.discriminator.train()
         for epoch in range(self.num_epochs):
-            for i, (images, _) in enumerate(self.train_loader):
+            for i, images in enumerate(self.train_loader):
                 # translate to binary images
                 images = images.to(self.device)
                 real_labels = torch.ones((images.shape[0])).to(self.device)
@@ -58,12 +54,11 @@ class Trainer:
                 generator_loss = self.loss(pred_fake_x, real_labels)
                 generator_loss.backward()
                 self.generator_optimizer.step()
-
-                if i % 100 == 0:
+                if i % 1 == 0:
                     print(f'Epoch [{epoch+1}/{self.num_epochs}], Step [{i+1}/{len(self.train_loader)}], \
                             G loss: {generator_loss.item():.4f}, D loss: {discriminator_loss.item():.4f}')
-                self.logger.add_scalar('G loss/train', generator_loss.item(), i + epoch * len(self.train_loader))
-                self.logger.add_scalar('D loss/train', discriminator_loss.item(), i + epoch * len(self.train_loader))
+                    self.logger.add_scalar('G loss/train', generator_loss.item(), epoch*len(self.train_loader)+i)
+                    self.logger.add_scalar('D loss/train', discriminator_loss.item(), epoch*len(self.train_loader)+i)
             self.save_model(self.config['ckpt_path'])
             with torch.no_grad():
                 z = torch.randn(16, self.input_channel).to(self.device)
@@ -76,8 +71,8 @@ class Trainer:
         torch.save(self.discriminator.state_dict(), os.path.join(output_path, f"discriminator.pth"))
 
     def visualize_samples(self, sample_images, epoch):
-        sample_images = sample_images.reshape(sample_images.shape[0], self.image_size, self.image_size).to('cpu')
-        npy_sampled_theta = np.array(sample_images)
+        sample_images = sample_images.to('cpu')
+        npy_sampled_theta = np.array(sample_images).transpose((0, 2, 3, 1))
         fig, axs = plt.subplots(4, 4, figsize=(8, 8))
         axs = visualize_float_result(npy_sampled_theta, axs)
         self.logger.add_figure(f"sample results", plt.gcf(), epoch)
