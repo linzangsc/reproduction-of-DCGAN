@@ -1,4 +1,6 @@
-## README
+## reproduction-of-DCGAN
+
+paper: https://arxiv.org/pdf/1511.06434
 
 usage: python train.py
 
